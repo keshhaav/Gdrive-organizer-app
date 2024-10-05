@@ -22,7 +22,7 @@ def authenticate():
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
-        redirect_uri=st.secrets["redirect_uri"]
+        redirect_uri=st.secrets["https://gdrive-organizer.streamlit.app/"]
     )
 
     if "token" not in st.session_state:

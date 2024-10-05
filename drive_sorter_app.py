@@ -1,0 +1,278 @@
+import streamlit as st
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+import os
+from googleapiclient.errors import HttpError
+from collections import defaultdict
+import json
+from groq import Groq
+from fuzzywuzzy import fuzz
+import groq
+import re
+
+groq_client = groq.Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+# Set up your Google OAuth 2.0 credentials
+CLIENT_CONFIG = st.secrets["google_oauth"]
+
+SCOPES = ['https://www.googleapis.com/auth/drive']
+
+def authenticate():
+    flow = Flow.from_client_config(
+        client_config=CLIENT_CONFIG,
+        scopes=SCOPES,
+        redirect_uri="http://localhost:8501"
+    )
+
+    if "token" not in st.session_state:
+        if "code" not in st.experimental_get_query_params():
+            authorization_url, _ = flow.authorization_url(prompt='consent')
+            st.markdown(f"[Click here to authorize]({authorization_url})")
+            return None
+        else:
+            flow.fetch_token(code=st.experimental_get_query_params()["code"][0])
+            st.session_state.token = flow.credentials.to_json()
+            st.rerun()
+
+    return Credentials.from_authorized_user_info(json.loads(st.session_state.token))
+
+def get_files(service):
+    try:
+        results = service.files().list(
+            pageSize=1000,
+            fields="nextPageToken, files(id, name)"
+        ).execute()
+        return results.get('files', [])
+    except HttpError as error:
+        st.error(f'An error occurred: {error}')
+        return None
+
+def assign_files_to_categories(file_names, categories):
+    categorized_files = {category: [] for category in categories}
+    
+    for file_name in file_names:
+        best_category = None
+        highest_similarity = 0
+        
+        for category in categories:
+            similarity = calculate_similarity(file_name, category)
+            if similarity > highest_similarity:
+                highest_similarity = similarity
+                best_category = category
+        
+        if best_category:
+            categorized_files[best_category].append(file_name)
+        else:
+            # If no suitable category is found, assign to "Miscellaneous"
+            if "Miscellaneous" not in categorized_files:
+                categorized_files["Miscellaneous"] = []
+            categorized_files["Miscellaneous"].append(file_name)
+    
+    return categorized_files
+
+def calculate_similarity(file_name, category):
+    # This is a simple implementation. You might want to use more sophisticated NLP techniques.
+    file_words = set(file_name.lower().split())
+    category_words = set(category.lower().split())
+    return len(file_words.intersection(category_words)) / len(file_words.union(category_words))
+
+def create_folder(service, folder_name, parent_id='root'):
+    folder_metadata = {
+        'name': folder_name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parent_id]
+    }
+    folder = service.files().create(body=folder_metadata, fields='id').execute()
+    st.write(f"Debug: Created folder '{folder_name}' with ID: {folder.get('id')}")
+    return folder.get('id')
+
+def get_ai_categories(file_names, num_categories=10):
+    try:
+        # Prepare a more detailed prompt
+        file_list = "\n".join(file_names[:100])  # Limit to first 100 files to avoid token limits
+        prompt = f"""Analyze the following list of file names and create {num_categories} unique, specific, and creative category names that would logically group these files. 
+        Consider the content, purpose, and context of the files, not just their file types. 
+        Aim for categories that reflect the actual subject matter or projects these files might belong to.
+        Avoid generic categories like 'Documents', 'Images', or 'Other'.
+        Only provide the category names, separated by commas:
+
+        {file_list}"""
+
+        # Make the API call
+        response = groq_client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=[
+                {"role": "system", "content": "You are an expert file organizer with a knack for identifying unique and meaningful categories."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Extract and process the categories
+        categories = response.choices[0].message.content.strip().split(',')
+        categories = [cat.strip() for cat in categories if cat.strip() and cat.lower() != 'other']
+        
+        # Ensure we have at least some categories
+        if len(categories) < 3:
+            categories.extend(["Project Files", "Personal Documents", "Miscellaneous"])
+        
+        return categories[:num_categories]  # Limit to requested number of categories
+
+    except Exception as e:
+        print(f"Error in get_ai_categories: {e}")
+        return ["Project Files", "Personal Documents", "Work Documents", "Research Materials", "Miscellaneous"]  # Fallback categories
+    
+def categorize_files(file_names):
+    categories = get_ai_categories(file_names)
+    categorized_files = {category: [] for category in categories}
+    uncategorized = []
+    
+    for file_name in file_names:
+        best_match = max(categories, key=lambda x: fuzz.token_set_ratio(file_name.lower(), x.lower()))
+        if fuzz.token_set_ratio(file_name.lower(), best_match.lower()) > 60:  # Increased threshold
+            categorized_files[best_match].append(file_name)
+        else:
+            uncategorized.append(file_name)
+    
+    # Remove empty categories
+    categorized_files = {k: v for k, v in categorized_files.items() if v}
+    
+    # Add uncategorized files if there are any
+    if uncategorized:
+        categorized_files["Uncategorized"] = uncategorized
+    
+    return categorized_files
+
+def clean_category_name(category):
+    # Remove numbers and trailing punctuation, then strip whitespace
+    return category.split('. ', 1)[-1].rstrip('.)').strip()
+
+def organize_files(service, files, categories):
+    for file in files:
+        file_name = file['name']
+        file_id = file['id']
+        
+        # Determine which category the file belongs to
+        # This is a simple example; you might want to use more sophisticated matching
+        for category in categories:
+            if category.lower() in file_name.lower():
+                # Check if the category folder exists, create if not
+                folder_id = create_or_get_folder(service, category)
+                
+                # Move the file to the category folder
+                service.files().update(fileId=file_id, addParents=folder_id, removeParents='root').execute()
+                break
+
+def create_or_get_folder(service, folder_name):
+    # Check if folder exists
+    results = service.files().list(q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
+                                   spaces='drive', fields='files(id, name)').execute()
+    folders = results.get('files', [])
+    
+    if folders:
+        return folders[0]['id']
+    else:
+        # Create folder
+        folder_metadata = {
+            'name': folder_name,
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+        folder = service.files().create(body=folder_metadata, fields='id').execute()
+        return folder.get('id')
+
+
+def move_file(service, file_id, folder_id):
+    try:
+        file = service.files().get(fileId=file_id, fields='parents').execute()
+        previous_parents = ",".join(file.get('parents'))
+        file = service.files().update(fileId=file_id,
+                                      addParents=folder_id,
+                                      removeParents=previous_parents,
+                                      fields='id, parents').execute()
+        st.write(f"Debug: Moved file {file_id} to folder {folder_id}")
+        return True
+    except Exception as e:
+        st.write(f"Debug: Error moving file {file_id}: {str(e)}")
+        return False
+
+
+
+def main():
+    st.title("Google Drive File Categorizer and Organizer")
+
+    creds = authenticate()
+    if creds:
+        try:
+            service = build('drive', 'v3', credentials=creds)
+            
+            # Fetch all files (handling pagination)
+            files = []
+            page_token = None
+            with st.spinner("Fetching files from Google Drive..."):
+                while True:
+                    results = service.files().list(
+                        q="'root' in parents and trashed=false",
+                        pageSize=1000,
+                        fields="nextPageToken, files(id, name, parents)",
+                        pageToken=page_token
+                    ).execute()
+                    files.extend(results.get('files', []))
+                    page_token = results.get('nextPageToken')
+                    if not page_token:
+                        break
+
+            if files:
+                file_names = [file['name'] for file in files]
+                st.write(f"Found {len(file_names)} files in your Google Drive.")
+                
+                with st.spinner("Generating categories..."):
+                    categories_dict = categorize_files(file_names)
+                
+                st.write("Generated categories:")
+                st.json(categories_dict)  # Debug: Display the full categories dictionary
+                
+                if st.button("Create folders and organize files"):
+                    progress_bar = st.progress(0)
+                    total_files = sum(len(files) for files in categories_dict.values())
+                    files_processed = 0
+                    
+                    for category, category_files in categories_dict.items():
+                        clean_category = clean_category_name(category)
+                        st.write(f"Processing category: {clean_category}")
+                        
+                        try:
+                            folder_metadata = {
+                                'name': clean_category,
+                                'mimeType': 'application/vnd.google-apps.folder',
+                                'parents': ['root']
+                            }
+                            folder = service.files().create(body=folder_metadata, fields='id').execute()
+                            folder_id = folder.get('id')
+                            st.write(f"Created folder: {clean_category} with ID: {folder_id}")  # Debug
+                            
+                            # Move files that match the category
+                            for file_name in category_files:
+                                matching_files = [file for file in files if file['name'] == file_name]
+                                for file in matching_files:
+                                    try:
+                                        move_result = move_file(service, file['id'], folder_id)
+                                        st.write(f"Moved file {file['name']}: {move_result}")  # Debug
+                                        files_processed += 1
+                                        progress_bar.progress(files_processed / total_files)
+                                    except HttpError as file_error:
+                                        st.warning(f"Error moving file '{file['name']}': {file_error}")
+                                        continue
+                            
+                            st.success(f"Created folder '{clean_category}' and moved matching files into it.")
+                        except HttpError as error:
+                            st.error(f"Error processing category '{clean_category}': {error}")
+                            continue
+                    
+                    st.success("File organization complete!")
+            else:
+                st.warning("No files found in your Google Drive.")
+        except HttpError as error:
+            st.error(f"An error occurred: {error}")
+
+if __name__ == "__main__":
+    main()

@@ -87,19 +87,18 @@ def create_folder(service, folder_name, parent_id='root'):
     st.write(f"Debug: Created folder '{folder_name}' with ID: {folder.get('id')}")
     return folder.get('id')
 
-def get_ai_categories(file_names, num_categories=10):
+def get_ai_categories(file_names, num_categories=15):
     try:
-        # Prepare a more detailed prompt
         file_list = "\n".join(file_names[:100])  # Limit to first 100 files to avoid token limits
-        prompt = f"""Analyze the following list of file names and create {num_categories} unique, specific, and creative category names that would logically group these files. 
+        prompt = f"""Analyze the following list of file names and create exactly {num_categories} unique, specific, and highly relevant category names that would logically group these files. 
         Consider the content, purpose, and context of the files, not just their file types. 
         Aim for categories that reflect the actual subject matter or projects these files might belong to.
         Avoid generic categories like 'Documents', 'Images', or 'Other'.
+        Ensure the categories are diverse and cover the range of topics present in the file names.
         Only provide the category names, separated by commas:
 
         {file_list}"""
 
-        # Make the API call
         response = groq_client.chat.completions.create(
             model="mixtral-8x7b-32768",
             messages=[
@@ -108,40 +107,37 @@ def get_ai_categories(file_names, num_categories=10):
             ]
         )
 
-        # Extract and process the categories
         categories = response.choices[0].message.content.strip().split(',')
-        categories = [cat.strip() for cat in categories if cat.strip() and cat.lower() != 'other']
+        categories = [cat.strip() for cat in categories if cat.strip()]
         
-        # Ensure we have at least some categories
-        if len(categories) < 3:
-            categories.extend(["Project Files", "Personal Documents", "Miscellaneous"])
-        
-        return categories[:num_categories]  # Limit to requested number of categories
+        return categories[:num_categories]  # Ensure we return exactly the requested number of categories
 
     except Exception as e:
         print(f"Error in get_ai_categories: {e}")
         return ["Project Files", "Personal Documents", "Work Documents", "Research Materials", "Miscellaneous"]  # Fallback categories
-    
+
 def categorize_files(file_names):
-    categories = get_ai_categories(file_names)
+    categories = get_ai_categories(file_names, num_categories=15)
     categorized_files = {category: [] for category in categories}
-    uncategorized = []
     
     for file_name in file_names:
         best_match = max(categories, key=lambda x: fuzz.token_set_ratio(file_name.lower(), x.lower()))
-        if fuzz.token_set_ratio(file_name.lower(), best_match.lower()) > 60:  # Increased threshold
-            categorized_files[best_match].append(file_name)
-        else:
-            uncategorized.append(file_name)
+        categorized_files[best_match].append(file_name)
     
-    # Remove empty categories
-    categorized_files = {k: v for k, v in categorized_files.items() if v}
+    # Sort categories by number of files, descending
+    sorted_categories = sorted(categorized_files.items(), key=lambda x: len(x[1]), reverse=True)
     
-    # Add uncategorized files if there are any
-    if uncategorized:
-        categorized_files["Uncategorized"] = uncategorized
+    # Keep only the top 15 categories
+    top_categories = dict(sorted_categories[:15])
     
-    return categorized_files
+    # Add any uncategorized files to the smallest category
+    if len(top_categories) < 15:
+        uncategorized = [file for file in file_names if not any(file in files for files in top_categories.values())]
+        if uncategorized:
+            smallest_category = min(top_categories, key=lambda x: len(top_categories[x]))
+            top_categories[smallest_category].extend(uncategorized)
+    
+    return top_categories
 
 def clean_category_name(category):
     # Remove numbers and trailing punctuation, then strip whitespace
@@ -163,6 +159,25 @@ def organize_files(service, files, categories):
                 service.files().update(fileId=file_id, addParents=folder_id, removeParents='root').execute()
                 break
 
+def move_file(service, file_id, folder_id):
+    try:
+        # Retrieve the file's current parents
+        file = service.files().get(fileId=file_id, fields='parents').execute()
+        previous_parents = ",".join(file.get('parents', []))
+        
+        # Move the file to the new folder
+        file = service.files().update(
+            fileId=file_id,
+            addParents=folder_id,
+            removeParents=previous_parents,
+            fields='id, parents'
+        ).execute()
+        
+        return True
+    except Exception as e:
+        st.write(f"Error moving file {file_id}: {str(e)}")
+        return False
+
 def create_or_get_folder(service, folder_name):
     # Check if folder exists
     results = service.files().list(q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
@@ -179,22 +194,6 @@ def create_or_get_folder(service, folder_name):
         }
         folder = service.files().create(body=folder_metadata, fields='id').execute()
         return folder.get('id')
-
-
-def move_file(service, file_id, folder_id):
-    try:
-        file = service.files().get(fileId=file_id, fields='parents').execute()
-        previous_parents = ",".join(file.get('parents'))
-        file = service.files().update(fileId=file_id,
-                                      addParents=folder_id,
-                                      removeParents=previous_parents,
-                                      fields='id, parents').execute()
-        st.write(f"Debug: Moved file {file_id} to folder {folder_id}")
-        return True
-    except Exception as e:
-        st.write(f"Debug: Error moving file {file_id}: {str(e)}")
-        return False
-
 
 
 def main():
@@ -229,13 +228,13 @@ def main():
                     categories_dict = categorize_files(file_names)
                 
                 st.write("Generated categories:")
-                st.json(categories_dict)  # Debug: Display the full categories dictionary
+                st.json(categories_dict)  # Display the categories and file counts
                 
                 if st.button("Create folders and organize files"):
                     progress_bar = st.progress(0)
                     total_files = sum(len(files) for files in categories_dict.values())
                     files_processed = 0
-                    
+                
                     for category, category_files in categories_dict.items():
                         clean_category = clean_category_name(category)
                         st.write(f"Processing category: {clean_category}")
@@ -248,17 +247,16 @@ def main():
                             }
                             folder = service.files().create(body=folder_metadata, fields='id').execute()
                             folder_id = folder.get('id')
-                            st.write(f"Created folder: {clean_category} with ID: {folder_id}")  # Debug
                             
-                            # Move files that match the category
                             for file_name in category_files:
                                 matching_files = [file for file in files if file['name'] == file_name]
                                 for file in matching_files:
                                     try:
-                                        move_result = move_file(service, file['id'], folder_id)
-                                        st.write(f"Moved file {file['name']}: {move_result}")  # Debug
-                                        files_processed += 1
-                                        progress_bar.progress(files_processed / total_files)
+                                        if move_file(service, file['id'], folder_id):
+                                            files_processed += 1
+                                            progress_bar.progress(files_processed / total_files)
+                                        else:
+                                            st.warning(f"Failed to move file '{file['name']}'")
                                     except HttpError as file_error:
                                         st.warning(f"Error moving file '{file['name']}': {file_error}")
                                         continue

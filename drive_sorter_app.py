@@ -89,8 +89,9 @@ def create_folder(service, folder_name, parent_id='root'):
 
 def get_ai_categories(file_names, num_categories=15):
     try:
-        file_list = "\n".join(file_names[:100])  # Limit to first 100 files to avoid token limits
-        prompt = f"""Analyze the following list of file names and create exactly {num_categories} unique, specific, and highly relevant category names that would logically group these files. 
+        file_list = "\n".join(file_names)  # Use all file names
+        prompt = f"""Analyze the following list of file names and create up to {num_categories} unique, specific, and highly relevant category names that would logically group these files. 
+        Only create categories that are actually needed based on the file names provided.
         Consider the content, purpose, and context of the files, not just their file types. 
         Aim for categories that reflect the actual subject matter or projects these files might belong to.
         Avoid generic categories like 'Documents', 'Images', or 'Other'.
@@ -110,11 +111,11 @@ def get_ai_categories(file_names, num_categories=15):
         categories = response.choices[0].message.content.strip().split(',')
         categories = [cat.strip() for cat in categories if cat.strip()]
         
-        return categories[:num_categories]  # Ensure we return exactly the requested number of categories
+        return categories  # Return all generated categories, may be less than num_categories
 
     except Exception as e:
         print(f"Error in get_ai_categories: {e}")
-        return ["Project Files", "Personal Documents", "Work Documents", "Research Materials", "Miscellaneous"]  # Fallback categories
+        return ["Miscellaneous"]
 
 def categorize_files(file_names):
     categories = get_ai_categories(file_names, num_categories=15)
@@ -143,21 +144,21 @@ def clean_category_name(category):
     # Remove numbers and trailing punctuation, then strip whitespace
     return category.split('. ', 1)[-1].rstrip('.)').strip()
 
-def organize_files(service, files, categories):
-    for file in files:
-        file_name = file['name']
-        file_id = file['id']
-        
-        # Determine which category the file belongs to
-        # This is a simple example; you might want to use more sophisticated matching
-        for category in categories:
-            if category.lower() in file_name.lower():
-                # Check if the category folder exists, create if not
-                folder_id = create_or_get_folder(service, category)
-                
-                # Move the file to the category folder
-                service.files().update(fileId=file_id, addParents=folder_id, removeParents='root').execute()
-                break
+
+def categorize_files(file_names):
+    categories = get_ai_categories(file_names)
+    categorized_files = {}
+    
+    for file_name in file_names:
+        best_match = max(categories, key=lambda x: fuzz.token_set_ratio(file_name.lower(), x.lower()))
+        if best_match not in categorized_files:
+            categorized_files[best_match] = []
+        categorized_files[best_match].append(file_name)
+    
+    # Remove any categories that ended up empty
+    categorized_files = {k: v for k, v in categorized_files.items() if v}
+    
+    return categorized_files
 
 def move_file(service, file_id, folder_id):
     try:
@@ -232,7 +233,7 @@ def main():
                 
                 if st.button("Create folders and organize files"):
                     progress_bar = st.progress(0)
-                    total_files = sum(len(files) for files in categories_dict.values())
+                    total_files = len(files)
                     files_processed = 0
                 
                     for category, category_files in categories_dict.items():
@@ -261,12 +262,12 @@ def main():
                                         st.warning(f"Error moving file '{file['name']}': {file_error}")
                                         continue
                             
-                            st.success(f"Created folder '{clean_category}' and moved matching files into it.")
+                            st.success(f"Created folder '{clean_category}' and moved {len(category_files)} files into it.")
                         except HttpError as error:
                             st.error(f"Error processing category '{clean_category}': {error}")
                             continue
                     
-                    st.success("File organization complete!")
+                    st.success(f"File organization complete! Created {len(categories_dict)} folders.")
             else:
                 st.warning("No files found in your Google Drive.")
         except HttpError as error:

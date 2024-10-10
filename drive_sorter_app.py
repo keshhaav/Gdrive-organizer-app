@@ -183,35 +183,17 @@ def move_file(service, file_id, folder_id):
         st.write(f"Error moving file {file_id}: {str(e)}")
         return False
 
-def create_or_get_folder(service, folder_name):
-    # Check if folder exists
-    results = service.files().list(q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
-                                   spaces='drive', fields='files(id, name)').execute()
-    folders = results.get('files', [])
-    
-    if folders:
-        return folders[0]['id']
-    else:
-        # Create folder
-        folder_metadata = {
-            'name': folder_name,
-            'mimeType': 'application/vnd.google-apps.folder'
-        }
-        folder = service.files().create(body=folder_metadata, fields='id').execute()
-        return folder.get('id')
-
-
 def main():
     st.title("Google Drive File Categorizer and Organizer")
 
-    # Add the stop button
-    if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
-        st.session_state.should_stop = True
-        st.error('Stopping the app...')
-        st.stop()
-
     creds = authenticate()
     if creds:
+        # Add the stop button after authentication
+        if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
+            st.session_state.should_stop = True
+            st.error('Stopping the app...')
+            st.stop()
+
         try:
             service = build('drive', 'v3', credentials=creds)
             

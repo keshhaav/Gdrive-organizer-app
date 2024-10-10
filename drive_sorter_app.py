@@ -11,6 +11,10 @@ from fuzzywuzzy import fuzz
 import groq
 import re
 
+
+if 'should_stop' not in st.session_state:
+    st.session_state.should_stop = False
+
 groq_client = groq.Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # Set up your Google OAuth 2.0 credentials
@@ -200,6 +204,12 @@ def create_or_get_folder(service, folder_name):
 def main():
     st.title("Google Drive File Categorizer and Organizer")
 
+    # Add the stop button
+    if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
+        st.session_state.should_stop = True
+        st.error('Stopping the app...')
+        st.stop()
+
     creds = authenticate()
     if creds:
         try:
@@ -210,6 +220,9 @@ def main():
             page_token = None
             with st.spinner("Fetching files from Google Drive..."):
                 while True:
+                    if st.session_state.should_stop:
+                        st.error('Operation stopped by user.')
+                        st.stop()
                     results = service.files().list(
                         q="'root' in parents and trashed=false",
                         pageSize=1000,
@@ -226,6 +239,9 @@ def main():
                 st.write(f"Found {len(file_names)} files in your Google Drive.")
                 
                 with st.spinner("Generating categories..."):
+                    if st.session_state.should_stop:
+                        st.error('Operation stopped by user.')
+                        st.stop()
                     categories_dict = categorize_files(file_names)
                 
                 st.write("Generated categories:")
@@ -237,6 +253,9 @@ def main():
                     files_processed = 0
                 
                     for category, category_files in categories_dict.items():
+                        if st.session_state.should_stop:
+                            st.error('Operation stopped by user.')
+                            st.stop()
                         clean_category = clean_category_name(category)
                         st.write(f"Processing category: {clean_category}")
                         
@@ -250,6 +269,9 @@ def main():
                             folder_id = folder.get('id')
                             
                             for file_name in category_files:
+                                if st.session_state.should_stop:
+                                    st.error('Operation stopped by user.')
+                                    st.stop()
                                 matching_files = [file for file in files if file['name'] == file_name]
                                 for file in matching_files:
                                     try:

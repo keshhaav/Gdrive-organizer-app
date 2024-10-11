@@ -40,6 +40,7 @@ def authenticate():
                 background-color: transparent;
                 color: white;
                 border: 2px solid white;
+                border-radius: 20px;  /* This makes the corners round */
                 padding: 10px 20px;
                 text-align: center;
                 text-decoration: none;

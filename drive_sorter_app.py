@@ -32,28 +32,6 @@ def authenticate():
     if "token" not in st.session_state:
         if "code" not in st.experimental_get_query_params():
             authorization_url, _ = flow.authorization_url(prompt='consent')
-            
-            # CSS for button styling
-            st.markdown("""
-            <style>
-            .stButton > button {
-                color: white;
-                background-color: transparent;
-                border: 2px solid white;
-                border-radius: 20px;
-                padding: 10px 20px;
-                font-size: 16px;
-                transition-duration: 0.4s;
-            }
-            .stButton > button:hover {
-                background-color: #0066cc;
-                color: white;
-                border-color: #0066cc;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            # Create the button using Streamlit's link_button
             st.link_button("Click to Authorize", authorization_url)
             
             return None

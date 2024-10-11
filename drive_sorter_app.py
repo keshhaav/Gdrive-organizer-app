@@ -33,14 +33,14 @@ def authenticate():
         if "code" not in st.experimental_get_query_params():
             authorization_url, _ = flow.authorization_url(prompt='consent')
             
-            # CSS for the button
+            # CSS and JavaScript for the button
             st.markdown("""
             <style>
             .auth-button {
                 background-color: transparent;
                 color: white;
                 border: 2px solid white;
-                border-radius: 20px;  /* This makes the corners round */
+                border-radius: 20px;
                 padding: 10px 20px;
                 text-align: center;
                 text-decoration: none;
@@ -56,10 +56,19 @@ def authenticate():
                 border-color: #0066cc;
             }
             </style>
+            <script>
+            function redirectToAuth(url) {
+                window.location.href = url;
+            }
+            </script>
             """, unsafe_allow_html=True)
             
             # Create the button
-            st.markdown(f'<a href="{authorization_url}" class="auth-button">Click to Authorize</a>', unsafe_allow_html=True)
+            st.markdown(f'''
+            <div class="auth-button" onclick="redirectToAuth('{authorization_url}')">
+                Click to Authorize
+            </div>
+            ''', unsafe_allow_html=True)
             return None
         else:
             flow.fetch_token(code=st.experimental_get_query_params()["code"][0])

@@ -32,7 +32,33 @@ def authenticate():
     if "token" not in st.session_state:
         if "code" not in st.experimental_get_query_params():
             authorization_url, _ = flow.authorization_url(prompt='consent')
-            st.markdown(f"[Click here to authorize]({authorization_url})")
+            
+            # CSS for the button
+            st.markdown("""
+            <style>
+            .auth-button {
+                background-color: transparent;
+                color: white;
+                border: 2px solid white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                transition-duration: 0.4s;
+                cursor: pointer;
+            }
+            .auth-button:hover {
+                background-color: #0066cc;
+                color: white;
+                border-color: #0066cc;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            # Create the button
+            st.markdown(f'<a href="{authorization_url}" class="auth-button">Click to Authorize</a>', unsafe_allow_html=True)
             return None
         else:
             flow.fetch_token(code=st.experimental_get_query_params()["code"][0])
@@ -40,7 +66,7 @@ def authenticate():
             st.rerun()
 
     return Credentials.from_authorized_user_info(json.loads(st.session_state.token))
-
+    
 def get_files(service):
     try:
         results = service.files().list(

@@ -33,42 +33,29 @@ def authenticate():
         if "code" not in st.experimental_get_query_params():
             authorization_url, _ = flow.authorization_url(prompt='consent')
             
-            # CSS and JavaScript for the button
+            # CSS for button styling
             st.markdown("""
             <style>
-            .auth-button {
-                background-color: transparent;
+            .stButton > button {
                 color: white;
+                background-color: transparent;
                 border: 2px solid white;
                 border-radius: 20px;
                 padding: 10px 20px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
                 font-size: 16px;
-                margin: 4px 2px;
                 transition-duration: 0.4s;
-                cursor: pointer;
             }
-            .auth-button:hover {
+            .stButton > button:hover {
                 background-color: #0066cc;
                 color: white;
                 border-color: #0066cc;
             }
             </style>
-            <script>
-            function redirectToAuth(url) {
-                window.location.href = url;
-            }
-            </script>
             """, unsafe_allow_html=True)
             
-            # Create the button
-            st.markdown(f'''
-            <div class="auth-button" onclick="redirectToAuth('{authorization_url}')">
-                Click to Authorize
-            </div>
-            ''', unsafe_allow_html=True)
+            # Create the button using Streamlit's link_button
+            st.link_button("Click to Authorize", authorization_url)
+            
             return None
         else:
             flow.fetch_token(code=st.experimental_get_query_params()["code"][0])

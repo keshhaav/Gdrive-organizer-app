@@ -172,7 +172,6 @@ def main():
     creds = authenticate()
     
     if not creds:
-        st.write("Please authorize the application to access your Google Drive.")
         return  # Exit the function if not authenticated
 
     # Add the stop button after authentication

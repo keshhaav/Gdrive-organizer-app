@@ -170,95 +170,62 @@ def main():
     st.title("Google Drive File Categorizer and Organizer")
 
     creds = authenticate()
-    if creds:
-        # Add the stop button after authentication
-        if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
-            st.session_state.should_stop = True
-            st.error('Stopping the app...')
-            st.stop()
+    if not creds:
+        return  # Exit the function if not authenticated
 
-        try:
-            service = build('drive', 'v3', credentials=creds)
-            
-            # Fetch all files (handling pagination)
-            files = []
-            page_token = None
-            with st.spinner("Fetching files from Google Drive..."):
-                while True:
-                    if st.session_state.should_stop:
-                        st.error('Operation stopped by user.')
-                        st.stop()
-                    results = service.files().list(
-                        q="'root' in parents and trashed=false",
-                        pageSize=1000,
-                        fields="nextPageToken, files(id, name, parents)",
-                        pageToken=page_token
-                    ).execute()
-                    files.extend(results.get('files', []))
-                    page_token = results.get('nextPageToken')
-                    if not page_token:
-                        break
+    # Add the stop button after authentication
+    if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
+        st.session_state.should_stop = True
+        st.error('Stopping the app...')
+        st.stop()
 
-            if files:
-                file_names = [file['name'] for file in files]
-                st.write(f"Found {len(file_names)} files in your Google Drive.")
-                
-                with st.spinner("Generating categories..."):
-                    if st.session_state.should_stop:
-                        st.error('Operation stopped by user.')
-                        st.stop()
-                    categories_dict = categorize_files(file_names)
-                
-                st.write("Generated categories:")
-                st.json(categories_dict)  # Display the categories and file counts
-                
-                if st.button("Create folders and organize files"):
-                    progress_bar = st.progress(0)
-                    total_files = len(files)
-                    files_processed = 0
-                
-                    for category, category_files in categories_dict.items():
-                        if st.session_state.should_stop:
-                            st.error('Operation stopped by user.')
-                            st.stop()
-                        clean_category = clean_category_name(category)
-                        st.write(f"Processing category: {clean_category}")
-                        
-                        try:
-                            folder_metadata = {
-                                'name': clean_category,
-                                'mimeType': 'application/vnd.google-apps.folder',
-                                'parents': ['root']
-                            }
-                            folder = service.files().create(body=folder_metadata, fields='id').execute()
-                            folder_id = folder.get('id')
-                            
-                            for file_name in category_files:
-                                if st.session_state.should_stop:
-                                    st.error('Operation stopped by user.')
-                                    st.stop()
-                                matching_files = [file for file in files if file['name'] == file_name]
-                                for file in matching_files:
-                                    try:
-                                        if move_file(service, file['id'], folder_id):
-                                            files_processed += 1
-                                            progress_bar.progress(files_processed / total_files)
-                                        else:
-                                            st.warning(f"Failed to move file '{file['name']}'")
-                                    except HttpError as file_error:
-                                        st.warning(f"Error moving file '{file['name']}': {file_error}")
-                                        continue
-                            
-                            st.success(f"Created folder '{clean_category}' and moved {len(category_files)} files into it.")
-                        except HttpError as error:
-                            st.error(f"Error processing category '{clean_category}': {error}")
-                            continue
-                    
-                    st.success(f"File organization complete! Created {len(categories_dict)} folders.")
-            else:
-                st.warning("No files found in your Google Drive.")
-        except HttpError as error:
-            st.error(f"An error occurred: {error}")
+    try:
+        service = build('drive', 'v3', credentials=creds)
+
+        # Get list of files
+        results = service.files().list(
+            pageSize=1000, fields="nextPageToken, files(id, name, mimeType, parents)").execute()
+        items = results.get('files', [])
+
+        if not items:
+            st.write('No files found.')
+        else:
+            st.write('Files:')
+            for item in items:
+                st.write(u'{0} ({1})'.format(item['name'], item['id']))
+
+        # File categorization
+        st.header("File Categorization")
+        categorize = st.button("Categorize Files")
+
+        if categorize:
+            categorized_files = categorize_files(items)
+            st.write("Files categorized:")
+            for category, files in categorized_files.items():
+                st.write(f"{category}: {len(files)} files")
+
+        # Folder creation
+        st.header("Folder Creation")
+        create_folders = st.button("Create Folders")
+
+        if create_folders:
+            folder_ids = create_category_folders(service)
+            st.write("Folders created:")
+            for category, folder_id in folder_ids.items():
+                st.write(f"{category}: {folder_id}")
+
+        # File moving
+        st.header("Move Files")
+        move_files_button = st.button("Move Files to Categories")
+
+        if move_files_button:
+            categorized_files = categorize_files(items)
+            folder_ids = create_category_folders(service)
+            move_files_to_folders(service, categorized_files, folder_ids)
+            st.write("Files moved to their respective category folders.")
+
+    except HttpError as error:
+        st.error(f"An error occurred: {error}")
 
 if __name__ == "__main__":
     main()

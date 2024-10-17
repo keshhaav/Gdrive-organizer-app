@@ -168,12 +168,12 @@ def move_file(service, file_id, folder_id):
 
 def main():
     st.title("Google Drive File Categorizer and Organizer")
-
+    st.sidebar.title("Authentication")
     creds = authenticate()
     
     if not creds:
         return  # Exit the function if not authenticated
-
+    st.sidebar.success("Authentication successful!")
     # Add the stop button after authentication
     if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
         st.session_state.should_stop = True

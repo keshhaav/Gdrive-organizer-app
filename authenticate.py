@@ -20,8 +20,7 @@ def authenticate():
         if "code" not in st.experimental_get_query_params():
             authorization_url, _ = flow.authorization_url(prompt='consent')
             st.link_button("Click to Authorize", authorization_url)
-            
-            return None
+            st.stop()  # Stop the script here
         else:
             flow.fetch_token(code=st.experimental_get_query_params()["code"][0])
             st.session_state.token = flow.credentials.to_json()

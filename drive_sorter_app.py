@@ -10,7 +10,7 @@ from groq import Groq
 from fuzzywuzzy import fuzz
 import groq
 import re
-from authenticate import authenticate
+
 
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False
@@ -22,7 +22,7 @@ CLIENT_CONFIG = st.secrets["google_oauth"]
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-authenticate()
+authenticate():
     
 def get_files(service):
     try:

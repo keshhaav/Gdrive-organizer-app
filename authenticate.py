@@ -20,7 +20,7 @@ def authenticate():
             redirect_uri="https://gdrive-organizer.streamlit.app/callback"
         )
         authorization_url, _ = flow.authorization_url(prompt='consent')
-        st.link_button("Click to Authorize", authorization_url)
+        st.sidebar.link_button("Click to Authorize", authorization_url)
         st.session_state.auth_state = "waiting_for_code"
         return None
 

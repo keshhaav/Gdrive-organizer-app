@@ -22,7 +22,7 @@ CLIENT_CONFIG = st.secrets["google_oauth"]
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-authenticate():
+authenticate()
     
 def get_files(service):
     try:

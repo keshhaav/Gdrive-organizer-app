@@ -10,6 +10,9 @@ from groq import Groq
 
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False
+    
+groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
 
 def get_ai_categories(file_names, num_categories=15):
     try:

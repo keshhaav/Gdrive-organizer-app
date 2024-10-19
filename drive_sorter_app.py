@@ -3,7 +3,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from authenticate import authenticate
-from drive_operations import get_files, move_file, create_folder
+from drive_operations import move_file, create_folder
 from file_categorization import categorize_files, clean_category_name
 from groq import Groq
 

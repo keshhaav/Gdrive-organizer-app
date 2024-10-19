@@ -3,16 +3,7 @@ from googleapiclient.errors import HttpError
 import streamlit as st
 
 
-def get_files(service):
-    try:
-        results = service.files().list(
-            pageSize=1000,
-            fields="nextPageToken, files(id, name)"
-        ).execute()
-        return results.get('files', [])
-    except HttpError as error:
-        st.error(f'An error occurred: {error}')
-        return None
+
     
 def create_folder(service, folder_name, parent_id='root'):
     folder_metadata = {

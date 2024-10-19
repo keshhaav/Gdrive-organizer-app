@@ -59,7 +59,11 @@ def categorize_files(file_names):
             top_categories[smallest_category].extend(uncategorized)
     
     return top_categories
-
+    
+def clean_category_name(category):
+    # Remove numbers and trailing punctuation, then strip whitespace
+    return category.split('. ', 1)[-1].rstrip('.)').strip()
+    
 def categorize_files(file_names):
     categories = get_ai_categories(file_names)
     categorized_files = {}
@@ -76,6 +80,4 @@ def categorize_files(file_names):
     return categorized_files
 
 
-def clean_category_name(category):
-    # Remove numbers and trailing punctuation, then strip whitespace
-    return category.split('. ', 1)[-1].rstrip('.)').strip()
+

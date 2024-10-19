@@ -1,11 +1,9 @@
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
 import streamlit as st
 import json
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-
 CLIENT_CONFIG = st.secrets["google_oauth"]
 
 def authenticate():
@@ -16,7 +14,7 @@ def authenticate():
         flow = Flow.from_client_config(
             client_config=CLIENT_CONFIG,
             scopes=SCOPES,
-            redirect_uri="https://gdrive-organizer.streamlit.app/callback"
+            redirect_uri="http://localhost:8501"
         )
         authorization_url, _ = flow.authorization_url(prompt='consent')
         st.sidebar.link_button("Click to Authorize", authorization_url)
@@ -24,22 +22,18 @@ def authenticate():
         return None
 
     elif st.session_state.auth_state == "waiting_for_code":
-        query_params = st.experimental_get_query_params()
-        if "code" in query_params:
+        if "code" in st.query_params:
             flow = Flow.from_client_config(
                 client_config=CLIENT_CONFIG,
                 scopes=SCOPES,
-                redirect_uri="https://gdrive-organizer.streamlit.app/callback"
+                redirect_uri="http://localhost:8501"
             )
-            flow.fetch_token(code=query_params["code"][0])
+            flow.fetch_token(code=st.query_params["code"])
             st.session_state.token = flow.credentials.to_json()
             st.session_state.auth_state = "authenticated"
-            # Clear the URL parameters
-            st.experimental_set_query_params()
+            st.query_params.clear()  # Clear the query parameters after use
             st.rerun()
         return None
 
     elif st.session_state.auth_state == "authenticated":
         return Credentials.from_authorized_user_info(json.loads(st.session_state.token))
-
-    return None

@@ -8,7 +8,6 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 
 CLIENT_CONFIG = st.secrets["google_oauth"]
 
-
 def authenticate():
     if "auth_state" not in st.session_state:
         st.session_state.auth_state = "initial"
@@ -25,17 +24,22 @@ def authenticate():
         return None
 
     elif st.session_state.auth_state == "waiting_for_code":
-        if "code" in st.experimental_get_query_params():
+        query_params = st.experimental_get_query_params()
+        if "code" in query_params:
             flow = Flow.from_client_config(
                 client_config=CLIENT_CONFIG,
                 scopes=SCOPES,
                 redirect_uri="https://gdrive-organizer.streamlit.app/callback"
             )
-            flow.fetch_token(code=st.experimental_get_query_params()["code"][0])
+            flow.fetch_token(code=query_params["code"][0])
             st.session_state.token = flow.credentials.to_json()
             st.session_state.auth_state = "authenticated"
+            # Clear the URL parameters
+            st.experimental_set_query_params()
             st.rerun()
         return None
 
     elif st.session_state.auth_state == "authenticated":
         return Credentials.from_authorized_user_info(json.loads(st.session_state.token))
+
+    return None

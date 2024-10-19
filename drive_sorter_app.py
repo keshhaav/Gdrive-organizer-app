@@ -11,6 +11,16 @@ from groq import Groq
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False
     
+def get_files(service):
+    try:
+        results = service.files().list(
+            pageSize=1000,
+            fields="nextPageToken, files(id, name)"
+        ).execute()
+        return results.get('files', [])
+    except HttpError as error:
+        st.error(f'An error occurred: {error}')
+        return None
 
 def main():
     st.title("Google Drive File Categorizer and Organizer")

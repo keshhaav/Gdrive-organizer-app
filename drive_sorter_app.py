@@ -12,10 +12,13 @@ if 'should_stop' not in st.session_state:
 def main():
     st.title("Google Drive File Categorizer and Organizer")
     st.sidebar.title("Authentication")
+    
     creds = authenticate()
     
     if not creds:
-        return  # Exit the function if not authenticated
+        st.write("Waiting for authentication...")
+        return
+
     st.sidebar.success("Authentication successful!")
     
     if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
@@ -27,11 +30,11 @@ def main():
         service = build('drive', 'v3', credentials=creds)
         
         with st.spinner("Fetching files from Google Drive..."):
-            files = get_files(service)  # Pass the service object to get_files
+            files = get_files(service)
 
         if files:
+            st.write(f"Found {len(files)} files in your Google Drive.")
             file_names = [file['name'] for file in files]
-            st.write(f"Found {len(file_names)} files in your Google Drive.")
             
             with st.spinner("Generating categories..."):
                 categories_dict = categorize_files(file_names)

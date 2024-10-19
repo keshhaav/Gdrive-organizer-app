@@ -8,7 +8,11 @@ from file_categorization import categorize_files, clean_category_name
 
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False
-
+categorize_files()
+clean_category_name()
+get_files()
+move_file()
+create_folder()
 def main():
     st.title("Google Drive File Categorizer and Organizer")
     st.sidebar.title("Authentication")

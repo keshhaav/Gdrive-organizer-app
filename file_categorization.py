@@ -1,6 +1,6 @@
 import streamlit as st
 from fuzzywuzzy import fuzz
-import groq as Groq
+from grow import Groq
 
 groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 

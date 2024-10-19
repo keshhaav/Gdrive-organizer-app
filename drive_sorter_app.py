@@ -5,6 +5,8 @@ from googleapiclient.errors import HttpError
 from authenticate import authenticate
 from drive_operations import get_files, move_file, create_folder
 from file_categorization import categorize_files, clean_category_name
+from groq import Groq
+
 
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False

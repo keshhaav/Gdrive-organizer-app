@@ -1,4 +1,4 @@
-# Google Drive File Categorizer and Organizer 📁✨
+# Google Drive File Categorizer and Organizer 📁
 
 An intelligent Google Drive organization tool that automatically categorizes and sorts your messy files using AI-powered categorization. Built with Streamlit and powered by the Mixtral-8x7B model through Groq.
 
@@ -32,7 +32,7 @@ An intelligent Google Drive organization tool that automatically categorizes and
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/keshhaav/Gdrive-organizer-app
 cd google-drive-organizer
 ```
 

@@ -18,7 +18,6 @@ An intelligent Google Drive organization tool that automatically categorizes and
 - **Authentication**: Google OAuth2
 - **AI Model**: Mixtral-8x7B (via Groq)
 - **APIs**: Google Drive API
-- **String Matching**: FuzzyWuzzy for intelligent file categorization
 - **Cloud Integration**: Google Cloud Platform
 
 ## Prerequisites 📋

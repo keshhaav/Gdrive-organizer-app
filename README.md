@@ -1,6 +1,6 @@
 # Google Drive File Categorizer and Organizer 📁
 
-An intelligent Google Drive organization tool that automatically categorizes and sorts your messy files using AI-powered categorization not just on the basis of the file formats of your files but also thier names using groq's mixtral AI.
+An intelligent Google Drive organization tool that automatically categorizes and sorts your messy files using AI-powered categorization not just on the basis of the file formats of your files but also thier names using groq's Llama 3.1 8B.
 
 ## Features 🚀
 
@@ -16,7 +16,7 @@ An intelligent Google Drive organization tool that automatically categorizes and
 
 - **Frontend**: Streamlit
 - **Authentication**: Google OAuth2
-- **AI Model**: Mixtral-8x7B (via Groq)
+- **AI Model**: Llama 3.1 8B (via Groq)
 - **APIs**: Google Drive API
 - **Cloud Integration**: Google Cloud Platform
 
@@ -82,7 +82,7 @@ streamlit run drive_sorter_app.py
 - Automatic token refresh
 
 ### File Categorization
-- AI-powered category generation using Mixtral-8x7B
+- AI-powered category generation using Llama 3.1 8B
 - Fuzzy string matching for accurate file assignment
 - Support for up to 15 unique categories
 

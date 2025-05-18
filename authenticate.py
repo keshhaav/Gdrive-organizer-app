@@ -14,7 +14,7 @@ def authenticate():
         flow = Flow.from_client_config(
             client_config=CLIENT_CONFIG,
             scopes=SCOPES,
-            redirect_uri="http://localhost:8501"
+            redirect_uri="https://gdrive-organizer.streamlit.app/_stcore/callback"
         )
         authorization_url, _ = flow.authorization_url(prompt='consent')
         st.sidebar.link_button("Click to Authorize", authorization_url)

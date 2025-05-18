@@ -25,9 +25,9 @@ def main():
         creds = authenticate()
         
         if not creds:
-            return  # Exit the function if not authenticated
+            return  
         st.sidebar.success("Authentication successful!")
-        # Add the stop button after authentication
+        
         if st.button('Stop', key='stop_button', help='Click to stop the app', type='primary'):
             st.session_state.should_stop = True
             st.error('Stopping the app...')
@@ -36,7 +36,7 @@ def main():
         try:
             service = build('drive', 'v3', credentials=creds)
             
-            # Fetch all files (handling pagination)
+            
             files = []
             page_token = None
             with st.spinner("Fetching files from Google Drive..."):
@@ -66,7 +66,7 @@ def main():
                     categories_dict = categorize_files(file_names)
                 
                 st.write("Generated categories:")
-                st.json(categories_dict)  # Display the categories and file counts
+                st.json(categories_dict)  
                 
                 if st.button("Create folders and organize files"):
                     progress_bar = st.progress(0)

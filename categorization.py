@@ -18,7 +18,7 @@ def get_ai_categories(file_names, num_categories=15):
         {file_list}"""
 
         response = groq_client.chat.completions.create(
-            model="qwen-qwq-32b",
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
                 {"role": "system", "content": "You are an expert file organizer with a knack for identifying unique and meaningful categories."},
                 {"role": "user", "content": prompt}

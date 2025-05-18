@@ -31,7 +31,7 @@ def authenticate():
             flow.fetch_token(code=st.query_params["code"])
             st.session_state.token = flow.credentials.to_json()
             st.session_state.auth_state = "authenticated"
-            st.query_params.clear()  # Clear the query parameters after use
+            st.query_params.clear()  
             st.rerun()
         return None
 

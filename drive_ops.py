@@ -27,11 +27,11 @@ def create_folder(service, folder_name, parent_id='root'):
 
 def move_file(service, file_id, folder_id):
     try:
-        # Retrieve the file's current parents
+       
         file = service.files().get(fileId=file_id, fields='parents').execute()
         previous_parents = ",".join(file.get('parents', []))
         
-        # Move the file to the new folder
+       
         file = service.files().update(
             fileId=file_id,
             addParents=folder_id,

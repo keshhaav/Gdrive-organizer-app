@@ -4,8 +4,6 @@ import json
 
 groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-
-
 def get_ai_categories(file_names):
     try:
         file_list = "\n".join(file_names)
@@ -43,10 +41,8 @@ def get_ai_categories(file_names):
         st.error(f"Error in get_ai_categories: {e}")
         return {"Miscellaneous": file_names}
 
-
 def categorize_files(file_names):
     return get_ai_categories(file_names)
-
 
 def clean_category_name(category):
     return category.split('. ', 1)[-1].rstrip('.)').strip()

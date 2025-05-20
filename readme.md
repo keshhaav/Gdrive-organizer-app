@@ -2,10 +2,10 @@
 
 > **Transform your chaotic Google Drive into a well-organized workspace!** The AI-powered file organizer that categorizes files based on their names and content context, not just file formats.
 
-[![Made with Streamlit](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+[![Made with Streamlit](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B.svg)](https://gdrive-organizer.streamlit.app/)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Google Drive API](https://img.shields.io/badge/Google%20Drive-API-green.svg)](https://developers.google.com/drive/api)
-[![Uses Groq LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://groq.com/)
+[![Uses Groq Cloud's Llama 3.1 LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)
 
 ## 🚀 Features
 
@@ -60,7 +60,7 @@ GROQ_API_KEY = "your-groq-api-key"
 streamlit run drive_sorter_app.py
 ```
 
-Then open your browser to http://localhost:8501
+This would automatically open http://localhost:8501 in your browser.
 
 ## 🧩 Project Structure
 
@@ -88,13 +88,3 @@ For example, it might create categories like:
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgements
-
-- [Streamlit](https://streamlit.io/) for the amazing web app framework
-- [Google Drive API](https://developers.google.com/drive/api) for Drive integration
-- [Groq](https://groq.com/) for the powerful LLM API

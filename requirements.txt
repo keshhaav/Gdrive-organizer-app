@@ -1,7 +1,6 @@
-streamlit
-google-auth
-google-auth-oauthlib
-google-api-python-client
-groq
-fuzzywuzzy
-python-Levenshtein
+streamlit>=1.27.0
+google-auth>=2.22.0
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.100.0
+groq>=0.4.0
+python-dotenv>=1.0.0

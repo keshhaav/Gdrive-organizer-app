@@ -2,7 +2,7 @@
 
 > **Transform your chaotic Google Drive into a well-organized workspace!** The AI-powered file organizer that categorizes files based on their names and content context, not just file formats.
 
-[![Made with Streamlit](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B.svg)](https://gdrive-organizer.streamlit.app/)
+[![Test it out here](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B.svg)](https://gdrive-organizer.streamlit.app/)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Google Drive API](https://img.shields.io/badge/Google%20Drive-API-green.svg)](https://developers.google.com/drive/api)
 [![Uses Groq Cloud's Llama 3.1 LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)

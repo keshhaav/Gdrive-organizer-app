@@ -5,25 +5,44 @@ from googleapiclient.errors import HttpError
 import streamlit as st
 
 def get_files(service):
-    try:
-        results = service.files().list(
-            pageSize=1000,
-            fields="nextPageToken, files(id, name)"
-        ).execute()
-        return results.get('files', [])
-    except HttpError as error:
-        st.error(f'An error occurred: {error}')
-        return None
+    page_token = None
+    results = service.files().list(
+                q="'root' in parents and trashed=false",
+                pageSize=1000,
+                fields="nextPageToken, files(id, name, parents)",
+                pageToken=page_token
+                )
+    return results
+
+def get_uncategorized_files(service):
+    files = []
+    page_token = None
     
-def create_folder(service, folder_name, parent_id='root'):
+    with st.spinner("Checking for uncategorized files in Google Drive..."):
+        query = "'root' in parents and mimeType != 'application/vnd.google-apps.folder'"              
+        try:
+                results = service.files().list(
+                    q=query,
+                    spaces='drive',
+                    fields='nextPageToken, files(id, name, mimeType)',
+                    pageToken=page_token
+                )
+                
+        except HttpError as error:
+            st.error(f"Error retrieving files: {error}")
+           
+    
+    return results
+    
+def create_folder(service,clean_category):   
     folder_metadata = {
-        'name': folder_name,
-        'mimeType': 'application/vnd.google-apps.folder',
-        'parents': [parent_id]
+            'name': clean_category,
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': ['root']
     }
     folder = service.files().create(body=folder_metadata, fields='id').execute()
-    st.write(f"Debug: Created folder '{folder_name}' with ID: {folder.get('id')}")
-    return folder.get('id')    
+    folder_id = folder.get('id')
+    return folder_id  
 
 def move_file(service, file_id, folder_id):
     try:

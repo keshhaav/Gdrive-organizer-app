@@ -9,7 +9,7 @@
 
 ## 🚀 Features
 
-- **Smart AI Categorization**: Uses Groq's Llama-3 model to analyze file names and create meaningful categories
+- **Smart AI Categorization**: Uses Groq's Llama-3.1 model to analyze file names and create meaningful categories
 - **One-Click Organization**: Automatically creates folders and moves files based on AI-generated categories
 - **Google Drive Integration**: Seamlessly connects to your Google Drive with secure OAuth2 authentication
 - **Streamlit UI**: Clean, responsive interface that runs in your browser

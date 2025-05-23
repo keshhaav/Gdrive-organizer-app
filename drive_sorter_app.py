@@ -103,7 +103,7 @@ def main():
     except HttpError as error:
         st.error(f"An error occurred: {error}")
 
-    if st.button("get uncategorized files",key="uncategorized_files_button"):
+    if st.button("Find & Categorize Missed Files",key="uncategorized_files_button"):
         files = []
         
         results = get_uncategorized_files(service).execute()

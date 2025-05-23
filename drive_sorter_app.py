@@ -9,6 +9,8 @@ from categorization import get_ai_categories, categorize_files, clean_category_n
 
 if 'should_stop' not in st.session_state:
     st.session_state.should_stop = False
+if 'organization_complete' not in st.session_state:
+    st.session_state.organization_complete = False
 
 def main():
     st.title("Google Drive File Categorizer and Organizer")
@@ -98,12 +100,13 @@ def main():
                         continue
                 
                 st.success(f"File organization complete! Created {len(categories_dict)} folders.")
+                st.session_state.organization_complete = True
         else:
             st.warning("No files found in your Google Drive.")
     except HttpError as error:
         st.error(f"An error occurred: {error}")
 
-    if st.button("Find & Categorize Missed Files",key="uncategorized_files_button"):
+    if st.session_state.organization_complete and st.button("Find & Categorize Missed Files",key="uncategorized_files_button"):
         files = []
         
         results = get_uncategorized_files(service).execute()

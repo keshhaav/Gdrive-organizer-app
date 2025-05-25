@@ -7,7 +7,10 @@
 [![Google Drive API](https://img.shields.io/badge/Google%20Drive-API-green.svg)](https://developers.google.com/drive/api)
 [![Uses Groq Cloud's Llama 4 Scout LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)
 
-[Watch the demo video](https://x.com/i/status/1926692917248217559)
+<video width="320" height="240" controls>
+  <source src="Gdrive-Demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ## 🚀 Features
 

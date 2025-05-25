@@ -5,11 +5,11 @@
 [![Test it out here](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B.svg)](https://gdrive-organizer.streamlit.app/)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Google Drive API](https://img.shields.io/badge/Google%20Drive-API-green.svg)](https://developers.google.com/drive/api)
-[![Uses Groq Cloud's Llama 3.1 LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)
+[![Uses Groq Cloud's Llama 4 Scout LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)
 
 ## 🚀 Features
 
-- **Smart AI Categorization**: Uses Groq's Llama-3.1 model to analyze file names and create meaningful categories
+- **Smart AI Categorization**: Uses Groq's Llama 4 Scout model to analyze file names and create meaningful categories
 - **One-Click Organization**: Automatically creates folders and moves files based on AI-generated categories
 - **Google Drive Integration**: Seamlessly connects to your Google Drive with secure OAuth2 authentication
 - **Streamlit UI**: Clean, responsive interface that runs in your browser
@@ -71,7 +71,7 @@ This would automatically open http://localhost:8501 in your browser.
 
 ## 🧠 AI Categorization Logic
 
-The app uses Groq's Llama 3.1 8B Instant model to analyze file names and group them into logical categories. It looks beyond simple file extensions to understand the context and purpose of your files.
+The app uses Groq's Llama 4 Scout 17b-16e model to analyze file names and group them into logical categories. It looks beyond simple file extensions to understand the context and purpose of your files.
 
 For example, it might create categories like:
 - "Project Alpha Documentation"

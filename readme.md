@@ -9,7 +9,7 @@
 
 
 
-[![Demo](https://github.com/user-attachments/assets/a688f57b-f400-49db-8e1a-bb731a21e5ca)
+https://github.com/user-attachments/assets/a688f57b-f400-49db-8e1a-bb731a21e5ca
 
 
 

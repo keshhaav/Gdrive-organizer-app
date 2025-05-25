@@ -7,7 +7,11 @@
 [![Google Drive API](https://img.shields.io/badge/Google%20Drive-API-green.svg)](https://developers.google.com/drive/api)
 [![Uses Groq Cloud's Llama 4 Scout LLM](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://console.groq.com/playground)
 
-[![Watch the demo](https://drive.google.com/file/d/1YokOprhzc6xibo_EQa4hPVo7wnL_9ZLC/view?usp=sharing)](https://drive.google.com/file/d/1fzW-4pGo1o1a0nEt-qrW5AyYaAcD1cxY/view?usp=sharing)
+
+
+[![Demo](https://github.com/user-attachments/assets/a688f57b-f400-49db-8e1a-bb731a21e5ca)
+
+
 
 ## 🚀 Features
 

@@ -33,8 +33,8 @@ https://github.com/user-attachments/assets/a688f57b-f400-49db-8e1a-bb731a21e5ca
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/google-drive-ai-organizer.git
-cd google-drive-ai-organizer
+git clone https://github.com/keshhaav/Gdrive-organizer-app.git
+cd Gdrive-organizer-app
 
 # Create and activate a virtual environment (optional but recommended)
 python -m venv venv

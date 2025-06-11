@@ -163,9 +163,6 @@ def main():
         else: 
             st.write ("No uncategorized files found in your Google Drive")
 
-
-
-
 if __name__ == "__main__":
     authenticate()
     main()
